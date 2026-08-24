@@ -6,7 +6,7 @@ no janky snap-back. Pull down, a colored strip stretches from behind the
 content with a soft elastic curve, follows your finger's X position, and
 either snaps back or triggers a refresh depending on how far you pulled.
 
-<!-- TODO: drop a screen recording / GIF here -->
+![Demo](demo.gif)
 
 ## Why this exists
 
