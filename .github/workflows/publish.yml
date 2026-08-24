@@ -12,7 +12,7 @@ name: Publish NuGet Package
 #        Repository Owner: aminparsa18
 #        Repository:       Plugin.Maui.PullToRefresh
 #        Workflow File:    publish.yml
-#        Environment:      (leave empty)
+#        Environment:      release
 #   2. In this GitHub repo: Settings -> Secrets and variables -> Actions ->
 #      New repository secret named NUGET_USER, value = your nuget.org
 #      profile username (not your email).
@@ -25,6 +25,7 @@ on:
 jobs:
   build-and-publish:
     runs-on: macos-latest
+    environment: release
     permissions:
       id-token: write # required to request the GitHub OIDC token
       contents: read
