@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ptr="clr-namespace:Plugin.Maui.PullToRefresh;assembly=Plugin.Maui.PullToRefresh"
+             xmlns:local="clr-namespace:Plugin.Maui.PullToRefresh.Example"
+             x:Class="Plugin.Maui.PullToRefresh.Example.MainPage"
+             Title="Pull To Refresh"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- #5B80C1 is the native pull-strip color — everything else is tuned to sit next to it. -->
+            <Color x:Key="BrandColor">#5B80C1</Color>
+            <Color x:Key="BrandDeep">#3E5A94</Color>
+            <Color x:Key="PageBg">#F4F6FB</Color>
+            <Color x:Key="PageBgDark">#13151F</Color>
+            <Color x:Key="CardBg">#FFFFFF</Color>
+            <Color x:Key="CardBgDark">#1E2130</Color>
+            <Color x:Key="TextPrimary">#1E2233</Color>
+            <Color x:Key="TextPrimaryDark">#F2F3F8</Color>
+            <Color x:Key="TextSecondary">#6B7280</Color>
+            <Color x:Key="TextSecondaryDark">#9AA3B8</Color>
+            <Color x:Key="PillBg">#1E2233</Color>
+            <Color x:Key="PillBgDark">#2A2E3D</Color>
+
+            <LinearGradientBrush x:Key="HeaderBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource BrandColor}" Offset="0.0" />
+                <GradientStop Color="{StaticResource BrandDeep}" Offset="1.0" />
+            </LinearGradientBrush>
+
+            <Shadow x:Key="CardShadow" Brush="Black" Opacity="0.08" Radius="10" Offset="0,3" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*"
+          BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
+
+        <!-- Header — fixed above the scrollable feed, so pulling never drags it along. -->
+        <Border Grid.Row="0"
+                Background="{StaticResource HeaderBrush}"
+                StrokeShape="RoundRectangle 0,0,28,28"
+                StrokeThickness="0"
+                Padding="24,64,24,30">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="PULL-TO-REFRESH DEMO"
+                       FontSize="11"
+                       CharacterSpacing="1.5"
+                       FontAttributes="Bold"
+                       TextColor="#CFDAF0" />
+                <Label Text="Inbox"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="30"
+                       TextColor="White" />
+                <Label FontSize="13"
+                       TextColor="#E4E9F7"
+                       Text="{Binding Items.Count, StringFormat='{0} conversations · pull down to sync'}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Wrap any scrollable content — a CollectionView here, a ScrollView works too — in
+             PullToRefreshView. Pulling down past the trigger threshold fires Command. -->
+        <ptr:PullToRefreshView Grid.Row="1" Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding Items}"
+                             Margin="0,-16,0,0"
+                             Padding="16,16,16,88">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:FeedItem">
+                        <Border BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
+                                StrokeShape="RoundRectangle 18"
+                                StrokeThickness="0"
+                                Shadow="{StaticResource CardShadow}"
+                                Padding="14"
+                                Margin="0,0,0,10">
+                            <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="12">
+                                <!-- Avatar -->
+                                <Border Grid.Column="0"
+                                        WidthRequest="48"
+                                        HeightRequest="48"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 24"
+                                        BackgroundColor="{Binding AccentColor}"
+                                        VerticalOptions="Start">
+                                    <Label Text="{Binding Initials}"
+                                           TextColor="White"
+                                           FontAttributes="Bold"
+                                           FontSize="16"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+
+                                <!-- Message -->
+                                <VerticalStackLayout Grid.Column="1"
+                                                      Spacing="2"
+                                                      VerticalOptions="Center">
+                                    <Label Text="{Binding Sender}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="15"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                    <Label Text="{Binding Subject}"
+                                           FontSize="14"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                                    <Label Text="{Binding Preview}"
+                                           FontSize="13"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                </VerticalStackLayout>
+
+                                <!-- Time + unread indicator -->
+                                <VerticalStackLayout Grid.Column="2"
+                                                      Spacing="8"
+                                                      HorizontalOptions="End"
+                                                      VerticalOptions="Start">
+                                    <Label Text="{Binding TimeLabel}"
+                                           FontSize="11"
+                                           HorizontalOptions="End"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                                    <BoxView WidthRequest="8"
+                                             HeightRequest="8"
+                                             CornerRadius="4"
+                                             Color="{StaticResource BrandColor}"
+                                             HorizontalOptions="End"
+                                             IsVisible="{Binding IsUnread}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </ptr:PullToRefreshView>
+
+        <!-- Status pill — floats over the feed instead of a plain caption. -->
+        <Border Grid.Row="1"
+                HorizontalOptions="Center"
+                VerticalOptions="End"
+                Margin="0,0,0,20"
+                Padding="16,10"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 20"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PillBg}, Dark={StaticResource PillBgDark}}"
+                Shadow="{StaticResource CardShadow}">
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <BoxView WidthRequest="8"
+                         HeightRequest="8"
+                         CornerRadius="4"
+                         Color="{StaticResource BrandColor}" />
+                <Label Text="{Binding StatusText}"
+                       FontSize="13"
+                       TextColor="White" />
+            </HorizontalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

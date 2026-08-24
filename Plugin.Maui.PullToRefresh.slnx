@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/example/">
+    <Project Path="example/Plugin.Maui.PullToRefresh.Example/Plugin.Maui.PullToRefresh.Example.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Plugin.Maui.PullToRefresh/Plugin.Maui.PullToRefresh.csproj" />
+  </Folder>
+</Solution>
