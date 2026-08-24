@@ -16,7 +16,7 @@
 	<PropertyGroup>
 		<!-- NuGet package metadata -->
 		<PackageId>Plugin.Maui.PullToRefresh</PackageId>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
 		<Title>Elastic Pull To Refresh for .NET MAUI</Title>
 		<Description>A pull-to-refresh control for .NET MAUI with a native, elastic curved-strip animation that tracks the finger 1:1 — no spinner, no RefreshView wrapper. Works over CollectionView and ScrollView on Android and iOS.</Description>
 		<PackageTags>maui;pull-to-refresh;refresh;animation;elastic;ios;android</PackageTags>
@@ -24,6 +24,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RepositoryUrl>https://github.com/aminparsa18/Plugin.Maui.PullToRefresh</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/aminparsa18/Plugin.Maui.PullToRefresh</PackageProjectUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
