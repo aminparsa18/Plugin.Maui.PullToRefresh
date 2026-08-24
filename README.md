@@ -62,11 +62,12 @@ example/Plugin.Maui.PullToRefresh.Example/   a runnable MAUI app demonstrating u
 
 ## Install
 
-Not yet published to NuGet. Until then, reference the project directly:
-
-```xml
-<ProjectReference Include="..\Plugin.Maui.PullToRefresh\src\Plugin.Maui.PullToRefresh\Plugin.Maui.PullToRefresh.csproj" />
+```bash
+dotnet add package Plugin.Maui.PullToRefresh
 ```
+
+Or via the NuGet package manager in Visual Studio / Rider. See the package on
+[NuGet.org](https://www.nuget.org/packages/Plugin.Maui.PullToRefresh/).
 
 ## Setup
 
@@ -105,6 +106,20 @@ binding `Command`, and an `IsRefreshing` bindable property reserved for host
 pages that want to track state explicitly (the handler itself doesn't read or
 write it — it just fires `Command`/`Refreshing` and lets you decide when the
 operation is done).
+
+The strip color is bindable via `StripColor`:
+
+```xml
+<ptr:PullToRefreshView
+    Command="{Binding RefreshCommand}"
+    StripColor="{Binding AccentColor}">
+    <CollectionView ItemsSource="{Binding Items}" />
+</ptr:PullToRefreshView>
+```
+
+It defaults to the plugin's brand blue (`#CC5B80C1`). The color's own alpha
+channel sets the strip's opacity at full pull — it fades in with pull
+progress from there.
 
 See `example/Plugin.Maui.PullToRefresh.Example` for a full working sample.
 
