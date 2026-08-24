@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Android.Views;
 using AndroidX.Core.Widget;
 using AndroidX.RecyclerView.Widget;
@@ -127,8 +128,16 @@ internal class PullInterceptor : Java.Lang.Object, global::Android.Views.View.IO
         _mauiView = mauiView;
         _mauiContext = context;
 
-        _overlay = new PullOverlayController(scrollTarget);
+        _overlay = new PullOverlayController(scrollTarget, mauiView.StripColor);
         _scrollTarget.SetOnTouchListener(this);
+
+        _mauiView.PropertyChanged += OnMauiViewPropertyChanged;
+    }
+
+    private void OnMauiViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PullToRefreshView.StripColor))
+            _overlay.SetColor(_mauiView.StripColor);
     }
 
     public bool OnTouch(global::Android.Views.View? v, MotionEvent? e)
@@ -224,6 +233,7 @@ internal class PullInterceptor : Java.Lang.Object, global::Android.Views.View.IO
 
     public void Detach()
     {
+        _mauiView.PropertyChanged -= OnMauiViewPropertyChanged;
         _scrollTarget.SetOnTouchListener(null);
         _overlay.Remove();
     }

@@ -16,24 +16,18 @@ internal class PullOverlayCurveView : UIView
     private float _pullPt;
     private float _xRatio = 0.5f;
 
-    // Match Android brand color: #CC5b80c1 (CC = ~0.8 alpha)
-    private static readonly UIColor _fillColor = new(
-        red:   91f  / 255f,
-        green: 128f / 255f,
-        blue:  193f / 255f,
-        alpha: 0.8f
-    );
-
-    public PullOverlayCurveView() : base(CGRect.Empty)
+    public PullOverlayCurveView(UIColor fillColor) : base(CGRect.Empty)
     {
         BackgroundColor = UIColor.Clear;
         UserInteractionEnabled = false;
 
-        _shapeLayer.FillColor = _fillColor.CGColor;
+        _shapeLayer.FillColor = fillColor.CGColor;
         Layer.AddSublayer(_shapeLayer);
 
         Alpha = 0f;
     }
+
+    public void SetColor(UIColor fillColor) => _shapeLayer.FillColor = fillColor.CGColor;
 
     public void SetPullProgress(float progress, float pullPt, float xRatio = 0.5f)
     {

@@ -1,6 +1,8 @@
+using System.ComponentModel;
 using CoreAnimation;
 using Foundation;
 using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Platform;
 using Plugin.Maui.PullToRefresh;
 using UIKit;
 using ContentView = Microsoft.Maui.Platform.ContentView;
@@ -67,11 +69,11 @@ internal class PullOverlayController
     private readonly PullOverlayCurveView _overlayView;
     private readonly UIView _parent;
 
-    public PullOverlayController(UIView scrollView)
+    public PullOverlayController(UIView scrollView, UIColor stripColor)
     {
         _parent = scrollView.Superview ?? scrollView;
 
-        _overlayView = new PullOverlayCurveView
+        _overlayView = new PullOverlayCurveView(stripColor)
         {
             Frame = _parent.Bounds,
             AutoresizingMask =
@@ -85,6 +87,8 @@ internal class PullOverlayController
         _overlayView.SetPullProgress(1f, 100f, 0.5f);
         _overlayView.Alpha = 0f;
     }
+
+    public void SetColor(UIColor stripColor) => _overlayView.SetColor(stripColor);
 
     /// <param name="pt">Pull distance in points from start Y</param>
     /// <param name="xRatio">Finger X as 0..1 fraction of scroll view width</param>
@@ -154,13 +158,21 @@ internal class PullGestureController
     {
         _scrollView = scrollView;
         _mauiView   = mauiView;
-        _overlay    = new PullOverlayController(scrollView);
+        _overlay    = new PullOverlayController(scrollView, mauiView.StripColor.ToPlatform());
 
         _pan = new UIPanGestureRecognizer(OnPan)
         {
             ShouldRecognizeSimultaneously = (_, _) => true // don't block scroll
         };
         _scrollView.AddGestureRecognizer(_pan);
+
+        _mauiView.PropertyChanged += OnMauiViewPropertyChanged;
+    }
+
+    private void OnMauiViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PullToRefreshView.StripColor))
+            _overlay.SetColor(_mauiView.StripColor.ToPlatform());
     }
 
     private void OnPan(UIPanGestureRecognizer recognizer)
@@ -258,6 +270,7 @@ internal class PullGestureController
 
     public void Detach()
     {
+        _mauiView.PropertyChanged -= OnMauiViewPropertyChanged;
         _scrollView.RemoveGestureRecognizer(_pan);
         _overlay.Remove();
     }

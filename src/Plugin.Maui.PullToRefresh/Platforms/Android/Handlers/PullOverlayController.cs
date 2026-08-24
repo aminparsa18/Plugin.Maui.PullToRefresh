@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Graphics;
 using Android.Views;
 using Android.Views.Animations;
+using Microsoft.Maui.Platform;
 using Color = Android.Graphics.Color;
 using Paint = Android.Graphics.Paint;
 using Path = Android.Graphics.Path;
@@ -21,11 +22,11 @@ internal class PullOverlayController
     private readonly ViewGroup _parent;
     private bool _attached;
 
-    public PullOverlayController(global::Android.Views.View recyclerView)
+    public PullOverlayController(global::Android.Views.View recyclerView, Microsoft.Maui.Graphics.Color stripColor)
     {
         _parent = (ViewGroup)recyclerView.Parent!;
 
-        _overlayView = new CurvedPullView(recyclerView.Context!);
+        _overlayView = new CurvedPullView(recyclerView.Context!, stripColor.ToPlatform());
 
         // Use explicit pixel size from the parent — NOT MatchParent
         var lp = new ViewGroup.LayoutParams(_parent.Width, _parent.Height);
@@ -46,6 +47,8 @@ internal class PullOverlayController
         _overlayView.Alpha = 0f;
         _overlayView.SetPullProgress(1f, 100f);
     }
+
+    public void SetColor(Microsoft.Maui.Graphics.Color stripColor) => _overlayView.SetColor(stripColor.ToPlatform());
 
     public void UpdatePull(float dp, float xRatio = 0.5f)
     {
@@ -113,20 +116,26 @@ internal class CurvedPullView : global::Android.Views.View
 
     private readonly Paint _fillPaint;
     private readonly Path _path = new();
+    private byte _maxAlpha; // strip's alpha ceiling, taken from the color's own alpha channel
 
     // Pre-computed control points — updated only when values change
     private float _lastW, _lastStripH, _lastCurveDepth, _lastCenterX;
 
-    public CurvedPullView(Context context) : base(context)
+    public CurvedPullView(Context context, Color color) : base(context)
     {
-        _fillPaint = new Paint(PaintFlags.AntiAlias)
-        {
-            Color = Color.ParseColor("#CC5b80c1"),
-        };
+        _fillPaint = new Paint(PaintFlags.AntiAlias);
         _fillPaint.SetStyle(Paint.Style.Fill);
+        SetColor(color);
 
         // Hardware layer = GPU caches this view, alpha changes are free
         SetLayerType(LayerType.Hardware, null);
+    }
+
+    public void SetColor(Color color)
+    {
+        _maxAlpha = color.A;
+        _fillPaint.Color = color;
+        PostInvalidate();
     }
 
     public void SetPullProgress(float progress, float pullDp, float xRatio = 0.5f)
@@ -184,7 +193,7 @@ internal class CurvedPullView : global::Android.Views.View
             _path.Close();
         }
 
-        _fillPaint.Alpha = (int)(204 * _progress);
+        _fillPaint.Alpha = (int)(_maxAlpha * _progress);
         canvas.DrawPath(_path, _fillPaint);
     }
 }

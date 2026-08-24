@@ -37,6 +37,21 @@ public class PullToRefreshView : ContentView
         set => SetValue(IsRefreshingProperty, value);
     }
 
+    /// <summary>Backing store for <see cref="StripColor"/>.</summary>
+    public static readonly BindableProperty StripColorProperty =
+        BindableProperty.Create(nameof(StripColor), typeof(Color), typeof(PullToRefreshView), Color.FromArgb("#CC5B80C1"));
+
+    /// <summary>
+    /// Color of the curved strip drawn during a pull. The color's own alpha channel sets the
+    /// strip's opacity at full pull — it fades in with pull progress from there. Defaults to the
+    /// plugin's brand blue (<c>#CC5B80C1</c>, ~80% opaque).
+    /// </summary>
+    public Color StripColor
+    {
+        get => (Color)GetValue(StripColorProperty);
+        set => SetValue(StripColorProperty, value);
+    }
+
     /// <summary>Fired when the user pulls far enough — host pages can bind <see cref="Command"/> instead if preferred.</summary>
     public event EventHandler? Refreshing;
 
