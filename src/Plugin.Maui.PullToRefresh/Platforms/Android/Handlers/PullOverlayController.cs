@@ -11,8 +11,9 @@ using Path = Android.Graphics.Path;
 namespace Plugin.Maui.PullToRefresh.Handlers;
 
 /// <summary>
-/// Adds a curved colored strip as a sibling view above the RecyclerView's parent.
-/// No MAUI GraphicsView involved — pure native for reliable touch + rendering.
+/// Adds a curved colored strip as a sibling view within the given container — normally the scroll
+/// target's parent, or the content's own root view for the non-scrollable fallback. No MAUI
+/// GraphicsView involved — pure native for reliable touch + rendering.
 /// </summary>
 internal class PullOverlayController
 {
@@ -22,11 +23,11 @@ internal class PullOverlayController
     private readonly ViewGroup _parent;
     private bool _attached;
 
-    public PullOverlayController(global::Android.Views.View recyclerView, Microsoft.Maui.Graphics.Color stripColor)
+    public PullOverlayController(ViewGroup container, Microsoft.Maui.Graphics.Color stripColor)
     {
-        _parent = (ViewGroup)recyclerView.Parent!;
+        _parent = container;
 
-        _overlayView = new CurvedPullView(recyclerView.Context!, stripColor.ToPlatform());
+        _overlayView = new CurvedPullView(container.Context!, stripColor.ToPlatform());
 
         // Use explicit pixel size from the parent — NOT MatchParent
         var lp = new ViewGroup.LayoutParams(_parent.Width, _parent.Height);

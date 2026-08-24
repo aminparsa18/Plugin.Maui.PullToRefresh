@@ -6,9 +6,16 @@
     xmlns:local="clr-namespace:Plugin.Maui.PullToRefresh.Example"
     Title="Plugin.Maui.PullToRefresh.Example">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Feed"
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+
+        <ShellContent
+            Title="Dashboard"
+            ContentTemplate="{DataTemplate local:DashboardPage}"
+            Route="DashboardPage" />
+    </TabBar>
 
 </Shell>

@@ -37,31 +37,26 @@ public partial class PullToRefreshViewHandler : ContentViewHandler
         // Post to next layout pass — children exist by then
         view.Post(() =>
         {
+            if (VirtualView is not PullToRefreshView mauiView) return;
+
             global::Android.Views.View? scrollTarget = FindRecyclerView(view) ?? FindScrollContainer(view);
 
-            if (scrollTarget != null && VirtualView is PullToRefreshView mauiView)
+            if (scrollTarget != null)
             {
-                _interceptor = new PullInterceptor(scrollTarget, mauiView, MauiContext!);
+                _interceptor = new PullInterceptor(scrollTarget, (ViewGroup)scrollTarget.Parent!, mauiView, MauiContext!);
             }
             else
             {
+                // Fallback: no RecyclerView/ScrollView descendant — wrap non-scrollable content
+                // (e.g. a Grid) directly. View.CanScrollVertically defaults to false for a plain
+                // ViewGroup, so PullInterceptor's "at top" check is naturally always true here —
+                // a downward drag from anywhere starts a pull immediately.
                 System.Diagnostics.Debug.WriteLine(
-                    "[Plugin.Maui.PullToRefresh] Could not find a RecyclerView/ScrollView in the view tree — " +
-                    "wrap a CollectionView or ScrollView inside PullToRefreshView.");
-                DumpViewTree(view, 0);
+                    "[Plugin.Maui.PullToRefresh] No RecyclerView/ScrollView found — using the " +
+                    "non-scrollable fallback (pull tracks immediately).");
+                _interceptor = new PullInterceptor(view, view, mauiView, MauiContext!);
             }
         });
-    }
-
-    private static void DumpViewTree(global::Android.Views.View view, int depth)
-    {
-        string indent = new('-', depth * 2);
-        System.Diagnostics.Debug.WriteLine($"{indent}{view.GetType().Name} ({view.Id})");
-        if (view is ViewGroup vg)
-        {
-            for (int i = 0; i < vg.ChildCount; i++)
-                DumpViewTree(vg.GetChildAt(i)!, depth + 1);
-        }
     }
 
     private static RecyclerView? FindRecyclerView(ViewGroup root)
@@ -103,13 +98,23 @@ public partial class PullToRefreshViewHandler : ContentViewHandler
 /// <summary>
 /// Wraps the scroll target's touch listener so we can detect downward pulls at top. Works with any
 /// View that supports CanScrollVertically — a RecyclerView (CollectionView) or a NestedScrollView/
-/// ScrollView (MAUI ScrollView), neither of which this class actually depends on beyond that.
+/// ScrollView (MAUI ScrollView), neither of which this class actually depends on beyond that. Also
+/// used, with the content's own root view as the scroll target, as the non-scrollable fallback —
+/// <c>CanScrollVertically</c> defaults to false there, so "at top" is always true.
 /// </summary>
 internal class PullInterceptor : Java.Lang.Object, global::Android.Views.View.IOnTouchListener
 {
     private readonly global::Android.Views.View _scrollTarget;
     private readonly PullToRefreshView _mauiView;
     private readonly IMauiContext _mauiContext;
+
+    // True when _scrollTarget is the content's own root (the non-scrollable fallback) rather than
+    // a real RecyclerView/ScrollView. A plain ViewGroup doesn't consume ACTION_DOWN on its own, so
+    // if we don't claim it ourselves (return true), Android never establishes us as the touch
+    // target and silently stops delivering MOVE/UP for the gesture to this listener. A real
+    // RecyclerView/ScrollView already claims DOWN itself via its own onTouchEvent, so this doesn't
+    // need to (and shouldn't, to avoid swallowing its native scroll/fling handling) apply there.
+    private readonly bool _claimsTouch;
 
     private float _startY;
     private float _lastY = 0;
@@ -122,13 +127,14 @@ internal class PullInterceptor : Java.Lang.Object, global::Android.Views.View.IO
     // The overlay — we hold a reference so we can animate it
     private readonly PullOverlayController _overlay;
 
-    public PullInterceptor(global::Android.Views.View scrollTarget, PullToRefreshView mauiView, IMauiContext context)
+    public PullInterceptor(global::Android.Views.View scrollTarget, ViewGroup overlayContainer, PullToRefreshView mauiView, IMauiContext context)
     {
         _scrollTarget = scrollTarget;
         _mauiView = mauiView;
         _mauiContext = context;
+        _claimsTouch = ReferenceEquals(scrollTarget, overlayContainer);
 
-        _overlay = new PullOverlayController(scrollTarget, mauiView.StripColor);
+        _overlay = new PullOverlayController(overlayContainer, mauiView.StripColor);
         _scrollTarget.SetOnTouchListener(this);
 
         _mauiView.PropertyChanged += OnMauiViewPropertyChanged;
@@ -228,7 +234,9 @@ internal class PullInterceptor : Java.Lang.Object, global::Android.Views.View.IO
                 break;
         }
 
-        return false;
+        // Claim the gesture in the non-scrollable fallback so Android keeps routing MOVE/UP to us
+        // (see _claimsTouch); otherwise decline, so the real RecyclerView/ScrollView still scrolls.
+        return _claimsTouch;
     }
 
     public void Detach()

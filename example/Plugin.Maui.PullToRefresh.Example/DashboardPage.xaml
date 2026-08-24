@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ptr="clr-namespace:Plugin.Maui.PullToRefresh;assembly=Plugin.Maui.PullToRefresh"
+             x:Class="Plugin.Maui.PullToRefresh.Example.DashboardPage"
+             Title="Dashboard"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="BrandColor">#5B80C1</Color>
+            <Color x:Key="BrandDeep">#3E5A94</Color>
+            <Color x:Key="PageBg">#F4F6FB</Color>
+            <Color x:Key="PageBgDark">#13151F</Color>
+            <Color x:Key="CardBg">#FFFFFF</Color>
+            <Color x:Key="CardBgDark">#1E2130</Color>
+            <Color x:Key="TextPrimary">#1E2233</Color>
+            <Color x:Key="TextPrimaryDark">#F2F3F8</Color>
+            <Color x:Key="TextSecondary">#6B7280</Color>
+            <Color x:Key="TextSecondaryDark">#9AA3B8</Color>
+            <Color x:Key="PillBg">#1E2233</Color>
+            <Color x:Key="PillBgDark">#2A2E3D</Color>
+
+            <LinearGradientBrush x:Key="HeaderBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource BrandColor}" Offset="0.0" />
+                <GradientStop Color="{StaticResource BrandDeep}" Offset="1.0" />
+            </LinearGradientBrush>
+
+            <Shadow x:Key="CardShadow" Brush="Black" Opacity="0.08" Radius="10" Offset="0,3" />
+
+            <Style x:Key="StatCard" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+                <Setter Property="StrokeThickness" Value="0" />
+                <Setter Property="Shadow" Value="{StaticResource CardShadow}" />
+                <Setter Property="Padding" Value="16" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*"
+          BackgroundColor="{AppThemeBinding Light={StaticResource PageBg}, Dark={StaticResource PageBgDark}}">
+
+        <!-- Header — fixed above the pulled content, so pulling never drags it along. -->
+        <Border Grid.Row="0"
+                Background="{StaticResource HeaderBrush}"
+                StrokeShape="RoundRectangle 0,0,28,28"
+                StrokeThickness="0"
+                Padding="24,48,24,30">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="NON-SCROLLABLE CONTENT DEMO"
+                       FontSize="11"
+                       CharacterSpacing="1.5"
+                       FontAttributes="Bold"
+                       TextColor="#CFDAF0" />
+                <Label Text="Dashboard"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="30"
+                       TextColor="White" />
+                <Label FontSize="13"
+                       TextColor="#E4E9F7"
+                       Text="No CollectionView or ScrollView here — just a Grid. Pull anywhere to sync." />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- PullToRefreshView wraps a plain Grid directly — no scrollable descendant at all. The
+             handler falls back to treating the content as always "at rest", so a downward drag
+             from anywhere in this tile grid starts a pull immediately. -->
+        <ptr:PullToRefreshView Grid.Row="1" Command="{Binding RefreshCommand}">
+            <Grid Margin="16"
+                  RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="*,*"
+                  RowSpacing="12"
+                  ColumnSpacing="12">
+
+                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ACTIVE SESSIONS" FontSize="11" CharacterSpacing="1" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        <Label Text="{Binding ActiveSessions}" FontFamily="OpenSansSemibold" FontSize="28"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="AVG LATENCY" FontSize="11" CharacterSpacing="1" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        <Label Text="{Binding AvgLatency}" FontFamily="OpenSansSemibold" FontSize="28"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="UPTIME" FontSize="11" CharacterSpacing="1" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        <Label Text="{Binding Uptime}" FontFamily="OpenSansSemibold" FontSize="28"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource StatCard}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="ERROR RATE" FontSize="11" CharacterSpacing="1" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
+                        <Label Text="{Binding ErrorRate}" FontFamily="OpenSansSemibold" FontSize="28"
+                               TextColor="{AppThemeBinding Light={StaticResource TextPrimary}, Dark={StaticResource TextPrimaryDark}}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </ptr:PullToRefreshView>
+
+        <!-- Status pill — floats over the grid instead of a plain caption. -->
+        <Border Grid.Row="1"
+                HorizontalOptions="Center"
+                VerticalOptions="End"
+                Margin="0,0,0,20"
+                Padding="16,10"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 20"
+                BackgroundColor="{AppThemeBinding Light={StaticResource PillBg}, Dark={StaticResource PillBgDark}}"
+                Shadow="{StaticResource CardShadow}">
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <BoxView WidthRequest="8"
+                         HeightRequest="8"
+                         CornerRadius="4"
+                         Color="{StaticResource BrandColor}" />
+                <Label Text="{Binding StatusText}"
+                       FontSize="13"
+                       TextColor="White" />
+            </HorizontalStackLayout>
+        </Border>
+    </Grid>
+
+</ContentPage>

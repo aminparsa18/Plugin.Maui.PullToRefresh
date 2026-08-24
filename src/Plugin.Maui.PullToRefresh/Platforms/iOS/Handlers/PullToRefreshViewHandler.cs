@@ -23,17 +23,24 @@ public partial class PullToRefreshViewHandler : ContentViewHandler
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            if (VirtualView is not PullToRefreshView mauiView) return;
+
             UIScrollView? scrollView = FindScrollView(platformView);
 
-            if (scrollView != null && VirtualView is PullToRefreshView mauiView)
+            if (scrollView != null)
             {
-                _gestureController = new PullGestureController(scrollView, mauiView);
+                UIView container = scrollView.Superview ?? scrollView;
+                _gestureController = new PullGestureController(scrollView, scrollView, container, mauiView);
             }
             else
             {
+                // Fallback: no UIScrollView descendant — wrap non-scrollable content (e.g. a Grid)
+                // directly. Passing null for scrollView makes PullGestureController treat "at top"
+                // as always true, so a downward drag from anywhere starts a pull immediately.
                 System.Diagnostics.Debug.WriteLine(
-                    "[Plugin.Maui.PullToRefresh] Could not find a UIScrollView in the view tree — " +
-                    "wrap a CollectionView or ScrollView inside PullToRefreshView.");
+                    "[Plugin.Maui.PullToRefresh] No UIScrollView found — using the non-scrollable " +
+                    "fallback (pull tracks immediately).");
+                _gestureController = new PullGestureController(platformView, null, platformView, mauiView);
             }
         });
     }
@@ -69,9 +76,14 @@ internal class PullOverlayController
     private readonly PullOverlayCurveView _overlayView;
     private readonly UIView _parent;
 
-    public PullOverlayController(UIView scrollView, UIColor stripColor)
+    /// <param name="container">
+    /// View the overlay is added into as a sibling — normally the scroll view's superview, or the
+    /// content's own root view for the non-scrollable fallback.
+    /// </param>
+    /// <param name="stripColor">Initial color of the curved strip.</param>
+    public PullOverlayController(UIView container, UIColor stripColor)
     {
-        _parent = scrollView.Superview ?? scrollView;
+        _parent = container;
 
         _overlayView = new PullOverlayCurveView(stripColor)
         {
@@ -141,7 +153,9 @@ internal class PullOverlayController
 
 internal class PullGestureController
 {
-    private readonly UIScrollView _scrollView;
+    private readonly UIView _target;
+    private readonly UIScrollView? _scrollView; // null for the non-scrollable fallback
+    private readonly UIView _container;
     private readonly PullToRefreshView _mauiView;
     private readonly PullOverlayController _overlay;
     private readonly UIPanGestureRecognizer _pan;
@@ -154,17 +168,26 @@ internal class PullGestureController
     private long  _lastUpdateMs = 0;
     private const long _frameMs  = 16; // ~60 fps
 
-    public PullGestureController(UIScrollView scrollView, PullToRefreshView mauiView)
+    /// <param name="target">View the pan gesture recognizer is attached to.</param>
+    /// <param name="scrollView">
+    /// The scrollable view, used only for the "at top" check — pass null for the non-scrollable
+    /// fallback, which treats "at top" as always true.
+    /// </param>
+    /// <param name="overlayContainer">View the curve overlay is drawn into, sized to its bounds.</param>
+    /// <param name="mauiView">The MAUI-facing control, for reading StripColor and firing Command/Refreshing.</param>
+    public PullGestureController(UIView target, UIScrollView? scrollView, UIView overlayContainer, PullToRefreshView mauiView)
     {
+        _target     = target;
         _scrollView = scrollView;
+        _container  = overlayContainer;
         _mauiView   = mauiView;
-        _overlay    = new PullOverlayController(scrollView, mauiView.StripColor.ToPlatform());
+        _overlay    = new PullOverlayController(overlayContainer, mauiView.StripColor.ToPlatform());
 
         _pan = new UIPanGestureRecognizer(OnPan)
         {
             ShouldRecognizeSimultaneously = (_, _) => true // don't block scroll
         };
-        _scrollView.AddGestureRecognizer(_pan);
+        _target.AddGestureRecognizer(_pan);
 
         _mauiView.PropertyChanged += OnMauiViewPropertyChanged;
     }
@@ -177,8 +200,8 @@ internal class PullGestureController
 
     private void OnPan(UIPanGestureRecognizer recognizer)
     {
-        UIView? container = _scrollView.Superview ?? _scrollView;
-        bool atTop = _scrollView.ContentOffset.Y <= 0;
+        UIView container = _container;
+        bool atTop = _scrollView is null || _scrollView.ContentOffset.Y <= 0;
 
         switch (recognizer.State)
         {
@@ -271,7 +294,7 @@ internal class PullGestureController
     public void Detach()
     {
         _mauiView.PropertyChanged -= OnMauiViewPropertyChanged;
-        _scrollView.RemoveGestureRecognizer(_pan);
+        _target.RemoveGestureRecognizer(_pan);
         _overlay.Remove();
     }
 }

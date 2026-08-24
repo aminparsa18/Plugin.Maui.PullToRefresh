@@ -33,6 +33,10 @@ here as a standalone, reusable control.
   `PullToRefreshView` looking for a `UIScrollView` (iOS) or a
   `RecyclerView`/`NestedScrollView` (Android) — so it works with
   `CollectionView` and `ScrollView` without any extra wiring.
+- **Non-scrollable content works too.** If nothing scrollable is found (say,
+  a plain `Grid` or `VerticalStackLayout`), the handler falls back to
+  treating the content as always "at rest" — a downward drag from anywhere
+  in it starts a pull immediately, same as pulling from the top of a list.
 - **The curve is damped, not linear:** strip height is
   `min(sqrt(pullDistance) * 5.5, maxHeight)`, which is what gives the
   "stretchy" feel instead of a strip that grows 1:1 with the finger.
@@ -86,8 +90,9 @@ builder
 
 ## Usage
 
-Wrap any scrollable content — a `CollectionView` or `ScrollView` — in
-`PullToRefreshView` and bind `Command` to whatever refreshes your data:
+Wrap any content — a `CollectionView`, a `ScrollView`, or even non-scrollable
+content like a `Grid` — in `PullToRefreshView` and bind `Command` to whatever
+refreshes your data:
 
 ```xml
 <ContentPage
@@ -100,6 +105,10 @@ Wrap any scrollable content — a `CollectionView` or `ScrollView` — in
 
 </ContentPage>
 ```
+
+`PullToRefreshView` isn't limited to scrollable content — wrap a plain `Grid`
+of static tiles or a dashboard layout the same way, and pulling down from
+anywhere in it triggers a refresh just as it would from the top of a list.
 
 `PullToRefreshView` also exposes a `Refreshing` event as an alternative to
 binding `Command`, and an `IsRefreshing` bindable property reserved for host
@@ -121,7 +130,9 @@ It defaults to the plugin's brand blue (`#CC5B80C1`). The color's own alpha
 channel sets the strip's opacity at full pull — it fades in with pull
 progress from there.
 
-See `example/Plugin.Maui.PullToRefresh.Example` for a full working sample.
+See `example/Plugin.Maui.PullToRefresh.Example` for a full working sample —
+its **Feed** tab wraps a `CollectionView`, and its **Dashboard** tab wraps a
+plain `Grid` of stat tiles to demonstrate the non-scrollable fallback.
 
 ## Platform support
 
