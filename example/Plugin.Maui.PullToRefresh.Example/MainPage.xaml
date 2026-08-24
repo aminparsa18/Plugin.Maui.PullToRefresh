@@ -40,7 +40,7 @@
                 Background="{StaticResource HeaderBrush}"
                 StrokeShape="RoundRectangle 0,0,28,28"
                 StrokeThickness="0"
-                Padding="24,64,24,30">
+                Padding="24,48,24,30">
             <VerticalStackLayout Spacing="4">
                 <Label Text="PULL-TO-REFRESH DEMO"
                        FontSize="11"
@@ -61,8 +61,8 @@
              PullToRefreshView. Pulling down past the trigger threshold fires Command. -->
         <ptr:PullToRefreshView Grid.Row="1" Command="{Binding RefreshCommand}">
             <CollectionView ItemsSource="{Binding Items}"
-                             Margin="0,-16,0,0"
-                             Padding="16,16,16,88">
+                            ItemsUpdatingScrollMode="KeepScrollOffset"
+                             Margin="12,12,12,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="local:FeedItem">
                         <Border BackgroundColor="{AppThemeBinding Light={StaticResource CardBg}, Dark={StaticResource CardBgDark}}"
@@ -117,12 +117,7 @@
                                            FontSize="11"
                                            HorizontalOptions="End"
                                            TextColor="{AppThemeBinding Light={StaticResource TextSecondary}, Dark={StaticResource TextSecondaryDark}}" />
-                                    <BoxView WidthRequest="8"
-                                             HeightRequest="8"
-                                             CornerRadius="4"
-                                             Color="{StaticResource BrandColor}"
-                                             HorizontalOptions="End"
-                                             IsVisible="{Binding IsUnread}" />
+                                 
                                 </VerticalStackLayout>
                             </Grid>
                         </Border>
