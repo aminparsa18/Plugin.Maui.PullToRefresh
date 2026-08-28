@@ -4,13 +4,19 @@ using AndroidX.Core.Widget;
 using AndroidX.RecyclerView.Widget;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
-using Plugin.Maui.PullToRefresh;
 
 namespace Plugin.Maui.PullToRefresh.Handlers;
 
 public partial class PullToRefreshViewHandler : ContentViewHandler
 {
     private PullInterceptor? _interceptor;
+
+    // ViewAttachedToWindow can fire more than once per Connect/DisconnectHandler pair (e.g. Shell
+    // tab switches or a cached nav-stack page being re-shown) without the handler being torn down
+    // and rebuilt in between. Guards the two ways that would otherwise create/leak a second
+    // interceptor: a live re-attach while one already exists, and a re-attach's posted callback
+    // still running the layout pass after DisconnectHandler already ran.
+    private bool _isDisconnected;
 
     /// <inheritdoc/>
     protected override ContentViewGroup CreatePlatformView() => base.CreatePlatformView();
@@ -19,14 +25,17 @@ public partial class PullToRefreshViewHandler : ContentViewHandler
     protected override void ConnectHandler(ContentViewGroup platformView)
     {
         base.ConnectHandler(platformView);
+        _isDisconnected = false;
         platformView.ViewAttachedToWindow += OnViewAttached;
     }
 
     /// <inheritdoc/>
     protected override void DisconnectHandler(ContentViewGroup platformView)
     {
+        _isDisconnected = true;
         platformView.ViewAttachedToWindow -= OnViewAttached;
         _interceptor?.Detach();
+        _interceptor = null;
         base.DisconnectHandler(platformView);
     }
 
@@ -37,26 +46,37 @@ public partial class PullToRefreshViewHandler : ContentViewHandler
         // Post to next layout pass — children exist by then
         view.Post(() =>
         {
-            if (VirtualView is not PullToRefreshView mauiView) return;
+            // The handler may have been disconnected (or already re-attached) before this ran.
+            if (_isDisconnected || VirtualView is not PullToRefreshView mauiView) return;
 
-            global::Android.Views.View? scrollTarget = FindRecyclerView(view) ?? FindScrollContainer(view);
-
-            if (scrollTarget != null)
-            {
-                _interceptor = new PullInterceptor(scrollTarget, (ViewGroup)scrollTarget.Parent!, mauiView, MauiContext!);
-            }
-            else
-            {
-                // Fallback: no RecyclerView/ScrollView descendant — wrap non-scrollable content
-                // (e.g. a Grid) directly. View.CanScrollVertically defaults to false for a plain
-                // ViewGroup, so PullInterceptor's "at top" check is naturally always true here —
-                // a downward drag from anywhere starts a pull immediately.
-                System.Diagnostics.Debug.WriteLine(
-                    "[Plugin.Maui.PullToRefresh] No RecyclerView/ScrollView found — using the " +
-                    "non-scrollable fallback (pull tracks immediately).");
-                _interceptor = new PullInterceptor(view, view, mauiView, MauiContext!);
-            }
+            InitializeInterceptor(view, mauiView);
         });
+    }
+
+    private void InitializeInterceptor(ViewGroup view, PullToRefreshView mauiView)
+    {
+        // A prior attach cycle may still have an interceptor live — detach it first so it doesn't
+        // linger subscribed to mauiView.PropertyChanged with its overlay still in the view tree.
+        _interceptor?.Detach();
+        _interceptor = null;
+
+        global::Android.Views.View? scrollTarget = FindRecyclerView(view) ?? FindScrollContainer(view);
+
+        if (scrollTarget != null)
+        {
+            _interceptor = new PullInterceptor(scrollTarget, (ViewGroup)scrollTarget.Parent!, mauiView, MauiContext!);
+        }
+        else
+        {
+            // Fallback: no RecyclerView/ScrollView descendant — wrap non-scrollable content
+            // (e.g. a Grid) directly. View.CanScrollVertically defaults to false for a plain
+            // ViewGroup, so PullInterceptor's "at top" check is naturally always true here —
+            // a downward drag from anywhere starts a pull immediately.
+            System.Diagnostics.Debug.WriteLine(
+                "[Plugin.Maui.PullToRefresh] No RecyclerView/ScrollView found — using the " +
+                "non-scrollable fallback (pull tracks immediately).");
+            _interceptor = new PullInterceptor(view, view, mauiView, MauiContext!);
+        }
     }
 
     private static RecyclerView? FindRecyclerView(ViewGroup root)

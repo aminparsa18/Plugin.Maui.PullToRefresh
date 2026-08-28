@@ -11,6 +11,12 @@ namespace Plugin.Maui.PullToRefresh.Handlers;
 /// </summary>
 internal class PullOverlayCurveView : UIView
 {
+    // sqrt() damping constant and the strip's height ceiling — the two knobs most likely to need
+    // retuning per device/feel during testing. Both in points. Keep numerically in sync with
+    // Android's CurvedPullView (Damping / MaxStripHeightDp).
+    private const float Damping = 5.5f;
+    private const float MaxStripHeightPt = 80f;
+
     private readonly CAShapeLayer _shapeLayer = new();
     private float _progress;
     private float _pullPt;
@@ -47,9 +53,9 @@ internal class PullOverlayCurveView : UIView
         float w = (float)Bounds.Width;
         if (w <= 0) w = (float)UIScreen.MainScreen.Bounds.Width;
 
-        // Same damping formula as Android (sqrt * 5.5), already in points on iOS
-        float dampedPull = (float)Math.Sqrt(_pullPt) * 5.5f;
-        float stripH     = Math.Min(dampedPull, 80f);
+        // Same damping formula as Android, already in points on iOS
+        float dampedPull = (float)Math.Sqrt(_pullPt) * Damping;
+        float stripH     = Math.Min(dampedPull, MaxStripHeightPt);
 
         float yBase = stripH * 0.35f;
         float dip   = stripH * 0.95f;
