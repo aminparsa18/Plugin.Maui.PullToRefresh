@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plugin.Maui.PullToRefresh.Handlers;
 
 namespace Plugin.Maui.PullToRefresh.Example;
 
@@ -10,10 +9,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
-			.ConfigureMauiHandlers(handlers =>
-			{
-				handlers.AddHandler<PullToRefreshView, PullToRefreshViewHandler>();
-			})
+			.UsePullToRefresh()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

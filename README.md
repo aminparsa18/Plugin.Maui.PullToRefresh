@@ -78,14 +78,11 @@ Or via the NuGet package manager in Visual Studio / Rider. See the package on
 Register the handler in `MauiProgram.cs`:
 
 ```csharp
-using Plugin.Maui.PullToRefresh.Handlers;
+using Plugin.Maui.PullToRefresh;
 
 builder
     .UseMauiApp<App>()
-    .ConfigureMauiHandlers(handlers =>
-    {
-        handlers.AddHandler<PullToRefreshView, PullToRefreshViewHandler>();
-    });
+    .UsePullToRefresh();
 ```
 
 ## Usage
