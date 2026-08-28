@@ -55,6 +55,6 @@ public class PullToRefreshView : ContentView
     /// <summary>Fired when the user pulls far enough — host pages can bind <see cref="Command"/> instead if preferred.</summary>
     public event EventHandler? Refreshing;
 
-    /// <summary>Called by the platform handler once a pull clears the trigger threshold. Not intended to be called by app code.</summary>
-    public void NotifyRefreshing() => Refreshing?.Invoke(this, EventArgs.Empty);
+    /// <summary>Called by the platform handler once a pull clears the trigger threshold.</summary>
+    internal void NotifyRefreshing() => Refreshing?.Invoke(this, EventArgs.Empty);
 }

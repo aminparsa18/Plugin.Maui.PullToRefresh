@@ -3,7 +3,6 @@ using CoreAnimation;
 using Foundation;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
-using Plugin.Maui.PullToRefresh;
 using UIKit;
 using ContentView = Microsoft.Maui.Platform.ContentView;
 
