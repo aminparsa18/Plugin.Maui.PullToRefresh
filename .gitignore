@@ -398,3 +398,6 @@ src/Core/AndroidNative/build/reports/
 # explicit path the workflow passes, so a local run leaves them untracked
 # in the repo root one `git add -A` away from being committed.
 ci-scan-reconcile-*.json
+
+# Claude Code skills (local tooling, not part of the repo's shipped content)
+.claude/skills/
